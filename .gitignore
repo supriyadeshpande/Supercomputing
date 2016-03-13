@@ -1,0 +1,9 @@
+cilk/
+Lectures/
+References/
+Project/
+Presentation/
+*.gz
+*.tgz
+Intel Cilk++ Programmer Manual.pdf
+Makefile

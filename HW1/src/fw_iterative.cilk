@@ -1,0 +1,103 @@
+#include <cilk.h>
+#include <cilkview.h>
+#include <iostream>
+#include <ctime>
+
+int** generate_matrix(int n){
+	int** matrix;
+	matrix = new int*[n+1];
+	int i = 1, j = 1, random;
+
+	//Generate a random matrix
+	for(i = 1; i <= n; i++){
+		matrix[i] = new int[n+1];
+		for(j = 1; j <= n; j++){
+			random = rand() % 100;
+			matrix[i][j] = random;
+		}
+	}
+	return matrix;
+}
+
+
+void fw_iterative(int ** matrix, int n){
+	int i,j,k = 0;
+
+	for(k = 1; k <= n; k++){
+		for(i = 1; i <= n; i++){
+			for(j = 1; j <= n; j++){
+				if(matrix[i][j] > matrix[i][k] + matrix[k][j])
+					matrix[i][j] = matrix[i][k] + matrix[k][j];
+			}
+		}
+	}
+
+}
+
+void fw_iterative_parallel(int ** matrix, int n){
+	int k;
+	for(k = 1; k <= n; k++){
+		cilk_for(unsigned int i = 1; i <= n; i++){
+			cilk_for(unsigned int j = 1; j <= n; j++){
+				if(matrix[i][j] > matrix[i][k] + matrix[k][j])
+					matrix[i][j] = matrix[i][k] + matrix[k][j];
+			}
+		}
+	}
+
+}
+
+void print_matrix(int ** matrix, int n){
+	int i,j;
+	for(i = 1; i <= n; i++){
+		for(j = 1; j <= n; j++){
+			std::cout << matrix[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}	
+}
+
+int ** copy_matrix(int ** orig, int n){
+	int** matrix;
+	matrix = new int*[n+1];
+	int i = 1, j = 1;
+
+	//Generate a random matrix
+	for(i = 1; i <= n; i++){
+		matrix[i] = new int[n+1];
+		for(j = 1; j <= n; j++){
+			matrix[i][j] = orig[i][j];
+		}
+	}
+	return matrix;
+
+}	
+
+int cilk_main(int argc, char * argv[]){
+	int n, i, j;
+	long long start, end;
+	int ** matrix = NULL;
+	int ** copy = NULL;
+
+	std::cout << "Enter value of n." << std::endl;
+	std::cin >> n;	
+
+	matrix = generate_matrix(n);
+	copy = copy_matrix(matrix, n);
+
+	start = clock();
+	fw_iterative(matrix, n);
+	end = clock();
+	std::cout << "Serial execution time: " << (end - start)/double(1000) << std::endl; 
+	delete[] matrix;
+	start = clock();
+	fw_iterative_parallel(copy, n);
+	end = clock();
+	std::cout << "Parallel execution time: " << (end - start)/double(1000) << std::endl; 
+	delete[] copy;
+}
+
+
+
+
+

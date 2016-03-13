@@ -2,23 +2,7 @@
 #include <cilkview.h>
 #include <iostream>
 #include <ctime>
-
-int** generate_matrix(int n){
-	int** matrix;
-	matrix = new int*[n+1];
-	int i = 1, j = 1, random;
-
-	//Generate a random matrix
-	for(i = 1; i <= n; i++){
-		matrix[i] = new int[n+1];
-		for(j = 1; j <= n; j++){
-			random = rand() % 100;
-			matrix[i][j] = random;
-		}
-	}
-	return matrix;
-}
-
+#include "headers/graph.h"
 
 void fw_iterative(int ** matrix, int n){
 	int i,j,k = 0;
@@ -34,6 +18,7 @@ void fw_iterative(int ** matrix, int n){
 
 }
 
+//Iterative FW using cilk_for
 void fw_iterative_parallel(int ** matrix, int n){
 	int k;
 	for(k = 1; k <= n; k++){
@@ -47,42 +32,17 @@ void fw_iterative_parallel(int ** matrix, int n){
 
 }
 
-void print_matrix(int ** matrix, int n){
-	int i,j;
-	for(i = 1; i <= n; i++){
-		for(j = 1; j <= n; j++){
-			std::cout << matrix[i][j] << " ";
-		}
-		std::cout << std::endl;
-	}	
-}
-
-int ** copy_matrix(int ** orig, int n){
-	int** matrix;
-	matrix = new int*[n+1];
-	int i = 1, j = 1;
-
-	//Generate a random matrix
-	for(i = 1; i <= n; i++){
-		matrix[i] = new int[n+1];
-		for(j = 1; j <= n; j++){
-			matrix[i][j] = orig[i][j];
-		}
-	}
-	return matrix;
-
-}	
-
 int cilk_main(int argc, char * argv[]){
 	int n, i, j;
 	long long start, end;
+	char * filename = (char *)malloc(100);
+	strcpy(filename, "input/input1.txt");
 	int ** matrix = NULL;
-	int ** copy = NULL;
 
-	std::cout << "Enter value of n." << std::endl;
-	std::cin >> n;	
-
-	matrix = generate_matrix(n);
+	matrix = read_matrix_from_file(filename);
+	//FUNCTION DEFINITION PENDING
+	//n = read_matrix_size_from_file(filename);
+/*
 	copy = copy_matrix(matrix, n);
 
 	start = clock();
@@ -95,6 +55,7 @@ int cilk_main(int argc, char * argv[]){
 	end = clock();
 	std::cout << "Parallel execution time: " << (end - start)/double(1000) << std::endl; 
 	delete[] copy;
+*/
 }
 
 

@@ -4,6 +4,9 @@
 //Reads an adjacency matrix from file
 int** read_matrix_from_file(char * filename);
 
+//Read size of adj matrix from file : line 1
+int read_matrix_size(char * filename);
+
 //Writes an adjacency matrix to file named filename
 void write_matrix_to_file(int ** matrix, int n, char * filename);
 

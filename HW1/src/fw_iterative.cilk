@@ -4,7 +4,9 @@
 #include <ctime>
 #include "headers/graph.h"
 
-void fw_iterative(int ** matrix, int n){
+using namespace std;
+
+void fw_iterative_serial(int ** matrix, int n){
 	int i,j,k = 0;
 
 	for(k = 1; k <= n; k++){
@@ -33,29 +35,23 @@ void fw_iterative_parallel(int ** matrix, int n){
 }
 
 int cilk_main(int argc, char * argv[]){
-	int n, i, j;
+	int n;
+	int ** matrix =  NULL;
+	int ** copy = NULL;
 	long long start, end;
-	char * filename = (char *)malloc(100);
-	strcpy(filename, "input/input1.txt");
-	int ** matrix = NULL;
-
-	matrix = read_matrix_from_file(filename);
-	//FUNCTION DEFINITION PENDING
-	//n = read_matrix_size_from_file(filename);
-/*
+	cout << "Enter matrix size: \n";
+	cin >> n;
+	matrix = generate_matrix(n);
 	copy = copy_matrix(matrix, n);
 
 	start = clock();
-	fw_iterative(matrix, n);
+	fw_iterative_serial(matrix, n);
 	end = clock();
 	std::cout << "Serial execution time: " << (end - start)/double(1000) << std::endl; 
-	delete[] matrix;
 	start = clock();
 	fw_iterative_parallel(copy, n);
 	end = clock();
 	std::cout << "Parallel execution time: " << (end - start)/double(1000) << std::endl; 
-	delete[] copy;
-*/
 }
 
 

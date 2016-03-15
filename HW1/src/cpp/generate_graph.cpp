@@ -14,6 +14,7 @@ int main(){
 	cin >> filename;
 	strcat(prefix, filename);
 	matrix = generate_matrix(n);
+	//print_matrix(matrix, n);
 	write_matrix_to_file(matrix, n, prefix);
 	return 0;
 }

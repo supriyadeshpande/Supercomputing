@@ -4,7 +4,7 @@
 #include <sstream>
 #include <string>
 
-
+using namespace std;
 //Generate a random matrix of size n
 int** generate_matrix(int n){
 	int** matrix;
@@ -29,14 +29,14 @@ int** generate_matrix(int n){
 void write_matrix_to_file(int ** matrix, int n, char * filename){
 	int i,j;
 	char * str = NULL;
-	std::ofstream out;
+	ofstream out;
 	out.open(filename);
-	out << n << std::endl;
+	out << n << endl;
 	for(i = 1; i <= n; i++){ 
 		for(int j=1; j<= n; j++){
 			out << matrix[i][j] << " ";
 		}
-		out << std::endl;
+		out << endl;
 	}
 	out.close();
 }
@@ -46,16 +46,16 @@ int** read_matrix_from_file(char * filename){
 	int ** matrix = NULL;
 	const char * delim = " ";
 	int i, j, n;
-	std::string data;
-	std::ifstream in;
+	string data;
+	ifstream in;
 	in.open(filename);
-	std::getline(in, data);
-	std::stringstream(data) >> n;
+	getline(in, data);
+	stringstream(data) >> n;
 	matrix = new int*[n+1];
 	for(i = 1; i<=n; i++){
 		matrix[i] = new int[n+1];		
-		std::getline(in, data);
-    	std::stringstream dataStream(data);
+		getline(in, data);
+    	stringstream dataStream(data);
     	int val;
     	for(j = 1 ; j <= n; j++){
     		dataStream >> val;
@@ -65,14 +65,23 @@ int** read_matrix_from_file(char * filename){
  	return matrix;
 }
 
+int read_matrix_size(char * filename){
+	int n;
+	string data;
+	ifstream in;
+	in.open(filename);
+	getline(in, data);
+	stringstream(data) >> n;
+	return n;
+}
 
 void print_matrix(int ** matrix, int n){
 	int i,j;
 	for(i = 1; i <= n; i++){
 		for(j = 1; j <= n; j++){
-			std::cout << matrix[i][j] << " ";
+			cout << matrix[i][j] << " ";
 		}
-		std::cout << std::endl;
+		cout << endl;
 	}	
 }
 

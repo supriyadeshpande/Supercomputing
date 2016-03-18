@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <cstdlib>
 
 using namespace std;
 //Generate a random matrix of size n

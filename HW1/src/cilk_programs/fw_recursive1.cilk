@@ -2,9 +2,10 @@
 #include <cilkview.h>
 #include <iostream>
 #include <ctime>
-#include "headers/graph.h"
+#include "../headers/graph.h"
 
 using namespace std;
+cilk::cilkview cv;
 
 int min(int a, int b){ return a < b ? a : b;}
 
@@ -134,17 +135,22 @@ int cilk_main(int arc, char * argv[]){
 	cin >> m;
 	x = generate_matrix(n);
 	copy = copy_matrix(x, n); 
-
+/*
 	start = clock();
 	AFW_serial(x, 1, 1, 1, 1, 1, 1, n, m);	
 	end = clock();
-	std::cout << "Serial execution time: " << (end - start)/double(1000) << std::endl; 
-		
+	cout << "Serial execution time: " << (end - start)/double(1000) << endl; 
+*/		
+	//cout << "Original matrix: " << endl;
+	//print_matrix(x, n);	
 	start = clock();
+	//cv.start();
 	AFW_parallel(copy, 1, 1, 1, 1, 1, 1, n, m);
+	//cv.stop();
 	end = clock();
-	std::cout << "Parallel execution time: " << (end - start)/double(1000) << std::endl; 
-
+	//cv.dump("main_tag");
+	cout << "Parallel execution time: " << (end - start)/double(1000) << endl; 
+	//print_matrix(copy, n);
 	return 0;
 }
 

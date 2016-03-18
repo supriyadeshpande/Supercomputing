@@ -1,8 +1,8 @@
 #include <cilk.h>
-#include <cilkview.h>
+//#include <cilkview.h>
 #include <iostream>
 #include <ctime>
-#include "headers/graph.h"
+#include "../headers/graph.h"
 
 using namespace std;
 

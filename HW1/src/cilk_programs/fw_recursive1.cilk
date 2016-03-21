@@ -21,10 +21,8 @@ void AFW_serial(int ** x, int x_row_st, int x_col_st,
 
 	//Recursion base case
 	if(n == m){
-		//cout << "Here" << endl;
 		int i,j,k; 
 		for(k = 0; k < n; k++){
-			//cout << "k=" << k << endl;
 			for(i = 0; i < n; i++){
 				for(j = 0; j < n; j++){
 					x[x_row_st + i][x_col_st + j] = min( x[x_row_st + i][x_col_st + j], 
@@ -77,10 +75,8 @@ void AFW_parallel(int ** x, int x_row_st, int x_col_st,
 
 	//Recursion base case
 	if(n == m){
-		//cout << "Here" << endl;
 		int i,j,k; 
 		for(k = 0; k < n; k++){
-			//cout << "k=" << k << endl;
 			for(i = 0; i < n; i++){
 				for(j = 0; j < n; j++){
 					x[x_row_st + i][x_col_st + j] = min( x[x_row_st + i][x_col_st + j], 

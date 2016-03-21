@@ -14,7 +14,7 @@ SRC4	= $(TARGET4).cilk $(DEPENDENCIES)
 
 
 
-all: $(TARGET1) $(TARGET2) $(TARGET3) $(TARGET4)
+all: $(TARGET3) $(TARGET4)
 
 $(TARGET1): $(SRC1)
 	$(CILKPP) $(SRC1) $(LIBARG) -o $@

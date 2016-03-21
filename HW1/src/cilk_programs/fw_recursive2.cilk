@@ -157,6 +157,6 @@ int cilk_main(int arc, char * argv[]){
 	AFW(copy, 1, 1, 1, 1, 1, 1, n, m);
 	end = clock();
 	std::cout << "Parallel execution time: " << (end - start)/double(1000) << std::endl; 
-
+	//print_matrix(copy, n);
 	return 0;
 }

@@ -31,7 +31,7 @@ void DFW(int ** x, int x_row_st, int x_col_st,
 			int v_row_st, int v_col_st,
 			int n, int m){
 
-		if(n > m)
+		if(m > n)
 			return;
 
 		if(n == m){
@@ -183,14 +183,12 @@ void AFW(int ** x, int x_row_st, int x_col_st,
 int cilk_main(int arc, char * argv[]){
 	int n, m;
 	int ** x = NULL;
-	int ** copy = NULL;
 	long long start, end;
 	cout << "Enter matrix size: \n";
 	cin >> n;
 	cout << "Enter base case size: \n";
 	cin >> m;
 	x = generate_matrix(n);
-	copy = copy_matrix(x, n); 
 
 /*
 	start = clock();
@@ -198,12 +196,12 @@ int cilk_main(int arc, char * argv[]){
 	end = clock();
 	cout << "Serial execution time: " << (end - start)/double(1000) << endl; 
 */	
-	cout << "Original matrix: " << endl;
-	print_matrix(x, n);	
+	//cout << "Original matrix: " << endl;
+	//print_matrix(x, n);	
 	start = clock();
-	AFW(copy, 1, 1, 1, 1, 1, 1, n, m);
+	AFW(x, 1, 1, 1, 1, 1, 1, n, m);
 	end = clock();
 	cout << "Parallel execution time: " << (end - start)/double(1000) << endl; 
-	print_matrix(copy, n);
+	//print_matrix(x, n);
 	return 0;
 }

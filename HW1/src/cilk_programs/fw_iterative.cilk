@@ -1,6 +1,7 @@
 #include <cilk.h>
 //#include <cilkview.h>
 #include <iostream>
+#include <cstdlib>
 #include <ctime>
 #include "../headers/graph.h"
 
@@ -35,12 +36,10 @@ void fw_iterative_parallel(int ** matrix, int n){
 }
 
 int cilk_main(int argc, char * argv[]){
-	int n;
-	int ** matrix =  NULL;
+	int n = atoi(argv[1]);
+	int ** matrix =  {0,1,2,};
 	int ** copy = NULL;
 	long long start, end;
-	cout << "Enter matrix size: \n";
-	cin >> n;
 	matrix = generate_matrix(n);
 	copy = copy_matrix(matrix, n);
 

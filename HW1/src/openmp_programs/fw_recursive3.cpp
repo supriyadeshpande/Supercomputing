@@ -29,6 +29,68 @@ void loopFW(int ** x, int x_row_st, int x_col_st,
 
 }
 
+void DFW(int ** x, int x_row_st, int x_col_st, 
+			int u_row_st, int u_col_st, 
+			int v_row_st, int v_col_st,
+			int n, int m){
+	if(m > n)
+		return;
+
+	if(n == m)
+		loopFW(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, m);
+	else{
+		int mid = n/2;
+		
+		#pragma omp parallel
+		{
+			#pragma omp sections
+			{
+				#pragma omp section
+				{
+					DFW(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, mid, m);		
+				}
+				#pragma omp section
+				{
+					DFW(x, x_row_st, x_col_st + mid, u_row_st, u_col_st, v_row_st, v_col_st + mid, mid, m);
+				}
+				#pragma omp section
+				{
+					DFW(x, x_row_st + mid, x_col_st, u_row_st + mid, u_col_st, v_row_st, v_col_st, mid, m);
+				}	
+				#pragma omp section
+				{
+					DFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st, v_row_st, v_col_st + mid, mid, m);
+				}
+			}
+		}
+
+		#pragma omp parallel
+		{
+			#pragma omp sections
+			{
+				#pragma omp section
+				{
+					DFW(x, x_row_st, x_col_st, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);	
+				}
+				#pragma omp section
+				{
+					DFW(x, x_row_st, x_col_st + mid, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st + mid, mid, m);
+				}
+				#pragma omp section
+				{
+					DFW(x, x_row_st + mid, x_col_st, u_row_st + mid, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
+				}
+				#pragma omp section
+				{
+					DFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st + mid, v_row_st + mid, v_col_st + mid, mid, m);	
+				}				
+			}				
+		}
+
+	}
+
+}
+
 void CFW(int ** x, int x_row_st, int x_col_st, 
 			int u_row_st, int u_col_st, 
 			int v_row_st, int v_col_st,
@@ -66,11 +128,11 @@ void CFW(int ** x, int x_row_st, int x_col_st,
 			{
 				#pragma omp section
 				{
-					CFW(x, x_row_st, x_col_st + mid, u_row_st, u_col_st, v_row_st, v_col_st + mid, mid, m);
+					DFW(x, x_row_st, x_col_st + mid, u_row_st, u_col_st, v_row_st, v_col_st + mid, mid, m);
 				}
 				#pragma omp section
 				{
-					CFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st, v_row_st, v_col_st + mid, mid, m);	
+					DFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st, v_row_st, v_col_st + mid, mid, m);	
 				}
 			}
 		}
@@ -97,11 +159,11 @@ void CFW(int ** x, int x_row_st, int x_col_st,
 			{
 				#pragma omp section
 				{
-					CFW(x, x_row_st, x_col_st, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);	
+					DFW(x, x_row_st, x_col_st, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);	
 				}
 				#pragma omp section
 				{
-					CFW(x, x_row_st + mid, x_col_st, u_row_st + mid, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
+					DFW(x, x_row_st + mid, x_col_st, u_row_st + mid, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
 				}
 			}
 		}
@@ -142,11 +204,11 @@ void BFW(int ** x, int x_row_st, int x_col_st,
 			{
 				#pragma omp section
 				{
-					BFW(x, x_row_st + mid, x_col_st, u_row_st + mid, u_col_st, v_row_st, v_col_st, mid, m);
+					DFW(x, x_row_st + mid, x_col_st, u_row_st + mid, u_col_st, v_row_st, v_col_st, mid, m);
 				}
 				#pragma omp section
 				{
-					BFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st, v_row_st, v_col_st + mid, mid, m);	
+					DFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st, v_row_st, v_col_st + mid, mid, m);	
 				}
 			}
 		}
@@ -173,11 +235,11 @@ void BFW(int ** x, int x_row_st, int x_col_st,
 			{
 				#pragma omp section
 				{
-					BFW(x, x_row_st, x_col_st, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
+					DFW(x, x_row_st, x_col_st, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
 				}
 				#pragma omp section
 				{
-					BFW(x, x_row_st, x_col_st + mid, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st + mid, mid, m);	
+					DFW(x, x_row_st, x_col_st + mid, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st + mid, mid, m);	
 				}
 			}
 		}
@@ -222,7 +284,7 @@ void AFW(int ** x, int x_row_st, int x_col_st,
 			}
 		}		
 		//AFW (X22, U21, V12)
-		AFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st, v_row_st, v_col_st + mid, mid, m);
+		DFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st, v_row_st, v_col_st + mid, mid, m);
 
 		//AFW (X22, U22, V22)
 		AFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st + mid, v_row_st + mid, v_col_st + mid, mid, m);
@@ -245,7 +307,7 @@ void AFW(int ** x, int x_row_st, int x_col_st,
 		}
 		
 		//AFW (X11, U12, V21)
-		AFW(x, x_row_st, x_col_st, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
+		DFW(x, x_row_st, x_col_st, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
 	}
 
 }
@@ -254,10 +316,12 @@ void AFW(int ** x, int x_row_st, int x_col_st,
 
 int main(int arc, char * argv[]){
 	int n = atoi(argv[1]);
-    int m = 16;
-    struct timeval start, end;
+    int m = 32;
+ 	
+	struct timeval start, end;
+	
     int ** x = NULL;
-
+    //long long start, end;
     x = generate_matrix(n);
 
     //ofstream myfile;
@@ -267,11 +331,8 @@ int main(int arc, char * argv[]){
    	gettimeofday(&end, NULL);
    	long duration = (end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec);
    	cout << duration/1000000.0 << endl;
-
-    //ofstream myfile;
-    //myfile.open("/work/04026/tg833255/submission/openmp_runtimes/recursive1.txt", ios_base::app);
+    //print_matrix(x, n);
     //myfile << "N = " << n << " M = " << m << " TIME: " << (end-start)/double(1000) << endl;
     //myfile.close();
     return 0;
-
 }

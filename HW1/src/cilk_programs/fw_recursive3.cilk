@@ -181,13 +181,18 @@ void AFW(int ** x, int x_row_st, int x_col_st,
 
 
 int cilk_main(int arc, char * argv[]){
-	int n, m;
+	int n=2, m=1;
 	int ** x = NULL;
+	//int x[4][4] = {{7,49,73,30}, {30,72,44,23}, {23,9,40,92}, {92,42,87,3}};
+	//int * y[4] = x;
 	long long start, end;
-	cout << "Enter matrix size: \n";
-	cin >> n;
-	cout << "Enter base case size: \n";
-	cin >> m;
+
+
+	 cout << "Enter matrix size: \n";
+	 cin >> n;
+	// cout << "Enter base case size: \n";
+	// cin >> m;
+	
 	x = generate_matrix(n);
 
 /*
@@ -197,11 +202,12 @@ int cilk_main(int arc, char * argv[]){
 	cout << "Serial execution time: " << (end - start)/double(1000) << endl; 
 */	
 	//cout << "Original matrix: " << endl;
-	//print_matrix(x, n);	
-	start = clock();
+	print_matrix(x, n);	
+	// start = clock();
 	AFW(x, 1, 1, 1, 1, 1, 1, n, m);
-	end = clock();
-	cout << "Parallel execution time: " << (end - start)/double(1000) << endl; 
-	//print_matrix(x, n);
+	// end = clock();
+	// cout << "Parallel execution time: " << (end - start)/double(1000) << endl; 
+	cout << "output" << endl;
+	print_matrix(x, n);
 	return 0;
 }

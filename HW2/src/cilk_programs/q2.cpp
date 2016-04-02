@@ -9,10 +9,6 @@
 
 using namespace std;
 
-long n_pow = 32;
-long m2 = 4;
-long m3 = 8;
-
 //Used for Base case: Sort numbers from x[start] to x[end]
 void insertion_sort(double * x, long start, long end){
     long i,j;
@@ -168,12 +164,6 @@ int main(int argc, char * argv[])
         long m3 = 4;
 
         double * x = generate_array(n);
-
-        /*for(int i = 0; i < n_pow; i++)
-        {
-                printf("%f      ", x[i]);
-        }
-        printf("\n\n\n");*/
 
         clock_t start, end;
         start = clock();

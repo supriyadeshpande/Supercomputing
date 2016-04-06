@@ -56,8 +56,7 @@ long binary_search(double key, double *arr, long start, long end)
 		mid = (start + end)/2;
 		if (arr[mid] < key)
 		{
-			start = mid + 1;
-			
+			start = mid + 1;	
 		}
 		else 
 		{

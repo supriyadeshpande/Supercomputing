@@ -1,0 +1,116 @@
+#include <cilk.h>
+#include <cilkview.h>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
+#include "../headers/array.h"
+
+using namespace std;
+
+//Used for Base case: Sort numbers from x[start] to x[end]
+void insertion_sort(double * x, int start, int end){
+	int i,j;
+	for(i = start+1; i <= end; i++){
+		int currIndex = i;
+		for(j = i-1; j >= 0; j--){
+			if(x[j] > x[currIndex]){
+				swap(x, j, currIndex);
+				currIndex = j;
+			}
+		}
+	}
+}
+
+long binary_search(double key, double *arr, long start, long end){
+	long mid;
+	while(end >= start)
+	{
+		mid = (start + end)/2;
+		if (arr[mid] < key)
+		{
+			start = mid + 1;
+			
+		}
+		else 
+		{
+			end = mid - 1;
+		}
+	}
+	return end+1;
+}
+
+
+//Merge x[start] to x[mid], x[mid+1] to x[end]
+void merge(double * x, int start, int mid, int end){
+	int leftSize = mid - start + 1;
+	int rightSize = end - mid;
+	double * left = new double[leftSize];
+	double * right = new double[rightSize];
+
+	memcpy(left, x + start, leftSize*sizeof(double));
+	memcpy(right, x + mid + 1, rightSize*sizeof(double));
+
+	int i=0, j=0, k=start;
+	while(i < leftSize && j < rightSize){
+		if(left[i] <= right[j])
+			x[k++] = left[i++];
+		else
+			x[k++] = right[j++];
+	}
+
+	while(i < leftSize)
+		x[k++] = left[i++];
+
+	while(j < rightSize)
+		x[k++] = right[j++];
+
+}
+
+
+//Sort x[start] to x[end]
+//NOTE: m is the base case size.
+void par_merge_sort_SM(double * x, int start, int end, int m){
+	int n = end - start + 1;
+	if(n <= m){
+		insertion_sort(x, start, end);
+		return;
+	}
+
+
+	int mid = start + (end - start)/2;
+	cilk_spawn par_merge_sort_SM(x, start, mid, m);
+	par_merge_sort_SM(x, mid+1, end, m);
+	cilk_sync;
+
+	merge(x, start, mid, end);
+}
+
+
+//Evaluate whether to keep m constant?
+extern "C++" void cpp_merge_sort_SM(double * x, int start, int end, int m){
+	cilk::run(par_merge_sort_SM, x, start, end, m);
+}
+
+int cilk_main(int argc, char * argv[]){
+	int n = atoi(argv[1]);
+	int m = 4;
+	cilk::cilkview cv;
+	
+	double * x = generate_array(n);
+
+	cv.start();
+	par_merge_sort_SM(x, 0, n-1, m);
+	cv.stop();
+	long duration = cv.accumulated_milliseconds();
+	//std::cout << "Serial execution time: " << (end - start)/CLOCKS_PER_SEC << std::endl; 
+
+    ofstream myfile;
+    myfile.open("/work/04026/tg833255/HW2/submission/Q1.txt", ios_base::app);
+    myfile << "N: " << n << " M: " << m << " TIME: " << duration << endl;
+    myfile.close();
+
+	return 0;
+}
+
+

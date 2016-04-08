@@ -13,7 +13,8 @@
 using namespace std;
 
 long min(long a, long b){return a <= b ? a : b;}
-// extern "C++" void cpp_merge_sort_SM(double * x, int start, int end, int m);
+
+extern void par_merge_sort_SM(double * x, long start, long end, long m);
 
 void insertion_sort(double * x, int start, int end){
 	int i,j;
@@ -243,7 +244,7 @@ void createSortedArr(double * x, long n, double * myBucket, long myBucketSize, i
 int main(int argc, char* argv[]){
 	int myrank;
 	int numProcs;
-	long m = 64;
+	long m = 16;
 	long q = 2; // For sending equidistant points after sorting array locally. Select every qth index in local array..
 	MPI_Status status;
 	MPI_Init(&argc, &argv);
@@ -253,7 +254,8 @@ int main(int argc, char* argv[]){
 	if(myrank == MASTER_RANK){
 		long n = 128; 
 		double * x = generate_array(n);
-
+		par_merge_sort_SM(x, 0, n-1, m);
+		
 		cout << "Input array: " << endl;
 		print_array(x, 0, n-1);
 		
@@ -265,21 +267,23 @@ int main(int argc, char* argv[]){
 		//Scatter keys to SLAVES.
 		scatterKeysToNodes(x, n, numProcs);
 
-		//Sort local keys
-		insertion_sort(x, 0, size_per_proc - 1);		
-		
+		//Sort local keys		
+		//insertion_sort(x, 0, size_per_proc - 1);		
+		par_merge_sort_SM(x, 0, size_per_proc-1, m);
+
 		//Create array for storing pivots from all processes including MASTER's pivots
 		double * allPivots = new double[n/q];
 		getLocalPivotsFromSlaves(allPivots, x, n, q, numProcs);
 		
 		long numLocalPivots = n/q;
 		//Sort pivots
-		insertion_sort(allPivots, 0, numLocalPivots-1);
+		//insertion_sort(allPivots, 0, numLocalPivots-1);
+		par_merge_sort_SM(allPivots, 0, numLocalPivots-1, m);
 		
 		long numGlobalPivots = numProcs-1;
 		double * globalPivots = new double[numGlobalPivots];
 		initializeGlobalPivots(allPivots, numLocalPivots, globalPivots, numGlobalPivots);
-
+		
 		//Distribute global pivots.	
 		distributeGlobalPivotsToSlaves(globalPivots, numGlobalPivots, numProcs);
 
@@ -297,15 +301,18 @@ int main(int argc, char* argv[]){
 
 
 		//Sort my bucket
-		insertion_sort(myBucket, 0, myBucketSize-1); //NOTE: Can be optimized by putting in createSortedArr function.
+		//insertion_sort(myBucket, 0, myBucketSize-1); //NOTE: Can be optimized by putting in createSortedArr function.
+		par_merge_sort_SM(myBucket, 0, myBucketSize-1, m);
 
 		//Receive final sorted buckets and create final array
 		createSortedArr(x, n, myBucket, myBucketSize, numProcs);
 
 		cout << "Sorted array: " << endl;
 		print_array(x, 0 , n-1);
+		
 	}
 	else{//**************************************SLAVE PROCESSES************************************************
+		
 		long n, dataSize, i;
 
 		//Get value of n
@@ -319,8 +326,8 @@ int main(int argc, char* argv[]){
 		//Gather the keys from MASTER
 		MPI_Recv(localKeys, dataSize, MPI_DOUBLE, MASTER_RANK, DEFAULT_TAG, MPI_COMM_WORLD, &status);
 	
-		// cpp_merge_sort_SM(localKeys, 0, dataSize-1, m);
-		insertion_sort(localKeys, 0, dataSize - 1);		
+		// insertion_sort(localKeys, 0, dataSize - 1);	
+		par_merge_sort_SM(localKeys, 0, dataSize - 1, m);	
 
 		//Form an arr of q equidistant points to be distributed to master
 		double * arr = new double[dataSize/q];
@@ -350,10 +357,12 @@ int main(int argc, char* argv[]){
 		receiveMyBuckets(myBucket, bucketPtr, numProcs, myrank);
 
 		//Sort my bucket locally
-		insertion_sort(myBucket, 0, myBucketSize-1);
+		// insertion_sort(myBucket, 0, myBucketSize-1);
+		par_merge_sort_SM(myBucket, 0, myBucketSize-1, m);
 
 		//Send my bucket to MASTER
 		sendSortedBucketToMaster(myBucket, myBucketSize);
+		
 	}
 	MPI_Finalize();
 	return 0;

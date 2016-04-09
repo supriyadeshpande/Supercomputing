@@ -7,5 +7,7 @@ double * generate_array(int n);
 
 void print_array(double * arr);
 
+void swap(long *x, long * y);
+
 void swap(double *x, long index1, long index2);
 #endif

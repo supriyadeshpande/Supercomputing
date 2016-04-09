@@ -8,6 +8,12 @@
 using namespace std;
 //Generate a random matrix of size n
 
+void swap(long * x, long * y){
+	long temp = *x;
+	*x = *y;
+	*y = temp;
+}
+
 void swap(double * x, long p1, long p2){
 	double temp = x[p1];
 	x[p1] = x[p2];

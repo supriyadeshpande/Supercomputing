@@ -81,34 +81,10 @@ void merge(double * t, long p1, long r1, long p2, long r2, double * x, long p3){
 
 void par_merge(double * t, long p1, long r1, long p2, long r2, double *x, long p3, long m2)
 {
-        // cout << "Par merge input: \n";
        
-    /*
-        if(r2 < p2 && r1 < p1)
-            return;
-        else if(r2 < p2){
-            cout << "Here1\n";
-            memcpy((void *)(x + p3), (void *)(t + p1), (r1-p1+1)*sizeof(double));
-            return;
-        }
-        else if(r1 < p1){
-            cout << "Here2\n";
-            memcpy((void *)(x + p3), (void *)(t + p2), (r2-p2+1)*sizeof(double));
-            return;
-        }
-*/
 
         long n1 = r1 - p1 + 1;
-        long n2 = r2 - p2 + 1;
-
-        // if(n1 ==3 && n2 ==2){
-        //     cout << "ss1\n";
-        //     print_array(t, p1, r1);
-        //      cout << "ss2\n";
-        //     print_array(t, p2, r2);
-        // }
-        
-
+        long n2 = r2 - p2 + 1;     
 
         long r3 = p3 + n1 + n2 - 1;
         long q1, q2, q3;
@@ -116,8 +92,6 @@ void par_merge(double * t, long p1, long r1, long p2, long r2, double *x, long p
 
         if (n1 + n2 <= m2) {
                 merge(t, p1, r1, p2, r2, x, p3);
-                // cout << "Normal merge output: " << endl;
-                // print_array(x, p3, r3);
         }
         else {
             if (n1 < n2)
@@ -138,18 +112,11 @@ void par_merge(double * t, long p1, long r1, long p2, long r2, double *x, long p
 
             x[q3] = t[q1];
 
-            // if(t[p1] == 1 && t[p2] == 4){
-            //     cout << "q1: " << q1 << " q2: " << q2 << "q3: " <<q3 << endl;   
-            // }
-
-            par_merge(t, p1, q1-1, p2, q2-1, x, p3, m2);
+            cilk_spawn par_merge(t, p1, q1-1, p2, q2-1, x, p3, m2);
             par_merge(t, q1 + 1, r1, q2, r2, x, q3+1, m2);
+            cilk_sync;
         }
         
-        // cout << "Par merge output: \n";
-        // cout << "p3: " <<p3<< " r3: "<<r3 << endl;
-        // print_array(x, p3, r3);
-
 }
 
 void par_merge_sort_PM(double * x, long start, long end, long m2, long m3){
@@ -168,31 +135,21 @@ void par_merge_sort_PM(double * x, long start, long end, long m2, long m3){
 
         long mid = start + (end - start)/2;
 
-        par_merge_sort_PM(x, start, mid, m2, m3);
+        cilk_spawn par_merge_sort_PM(x, start, mid, m2, m3);
         par_merge_sort_PM(x, mid+1, end, m2, m3);
+        cilk_sync;
 
         long leftSize = mid - start + 1;
 
-        // cout << "p1: ";
-        // print_array(x, start, mid);
-        // cout << "p2: ";
-        // print_array(x, mid+1, end);
-        // cout << "\n" << n << endl;
 
         for(i = 0; i < n; i++) {
                 t[i] = x[start + i];
         }
 
         mid = mid - start + 1;
-        // cout << "Before merge\n";
-        // print_array(x, start, mid);
-        // print_array(x, mid+1, end);
 
         par_merge(t, 0, mid-1, mid, n-1, x, start, m2);
         
-        // cout << "After merge\n";
-        // print_array(x, start, mid);
-
         delete[] t;
 }
 

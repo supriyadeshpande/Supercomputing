@@ -6,6 +6,9 @@ References/
 Project/
 Presentation/
 Submissions/
+HW3/*.txt
+HW3/*.pdf
 *.gz
 *.tgz
+*.zip
 Intel Cilk++ Programmer Manual.pdf

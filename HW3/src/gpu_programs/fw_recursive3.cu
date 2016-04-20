@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <math.h>
 #include "../headers/graph.h"
 
 #define THREADS_PER_BLOCK_X 32
@@ -19,9 +20,6 @@ void AloopFW_inner(int ** d_x, int x_row_st, int x_col_st,
 			int v_row_st, int v_col_st,
 			int m, int k){
 
-
-	
-
 	int row_offset = blockIdx.x*blockDim.x + threadIdx.x;
 	int col_offset = blockIdx.y*blockDim.y + threadIdx.y;
 
@@ -29,8 +27,6 @@ void AloopFW_inner(int ** d_x, int x_row_st, int x_col_st,
 	if(d_x[x_row_st + row_offset][x_col_st + col_offset] > sum)
 		d_x[x_row_st + row_offset][x_col_st + col_offset] = sum;
 	
-	//NEEDED?
-	//syncthreads();
 
 	/*
 
@@ -171,6 +167,7 @@ void DloopFW(int ** d_x, int x_row_st, int x_col_st,
 	int sum = d_x[u_row_st + row_offset][u_col_st + k] + d_x[v_row_st + k][v_col_st + col_offset];
 	if(d_x[x_row_st + row_offset][x_col_st + col_offset] > sum)
 		d_x[x_row_st + row_offset][x_col_st + col_offset] = sum;
+	
 
 
 } 
@@ -200,7 +197,24 @@ void DFW(int ** x, int x_row_st, int x_col_st,
 
 			DloopFW<<<blocksPerGrid, threadsPerBlock>>>(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, m);
 			*/
-			AloopFW_outer(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, m);
+			
+			
+			int threadZ = m;
+			int threadX = (int)sqrt(double(MAX_THREADS_PER_BLOCK/threadZ));
+			if(threadX > m)
+				threadX = m;
+			int threadY = threadX;
+
+			int blockX = m % threadX == 0 ? m/threadX : m/threadX + 1;
+			int blockY = m % threadY == 0 ? m/threadY : m/threadY + 1;
+			int blockZ = m % threadZ == 0 ? m/threadZ : m/threadZ + 1; // will always be 1
+			
+			dim3 blocksPerGrid(blockX, blockY, blockZ);
+			dim3 threadsPerBlock(threadX, threadY, threadZ);
+
+			DloopFW<<<blocksPerGrid, threadsPerBlock>>>(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, m);	
+			
+			 AloopFW_outer(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, m);
 		}
 		else{
 			int mid = n/2;
@@ -367,7 +381,7 @@ int main(int argc, char * argv[])
 	
 	//Matrix
 	int n = atoi(argv[1]);
-	int m = 4;
+	int m = 16;
 	int ** matrix = generate_matrix(n);
 	int ** dev_matrix = copy_matrix_to_device(matrix, n);
 	

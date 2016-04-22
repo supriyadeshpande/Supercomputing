@@ -7,9 +7,9 @@
 
 #define THREADS_PER_BLOCK_X 32
 #define THREADS_PER_BLOCK_Y 32
-
 #define MAX_THREADS_PER_BLOCK 1024
-
+#define MAX_SHARED_MEM_PER_BLOCK 1024
+#define S_MATRIX_SIZE 32
 
 using namespace std;
 
@@ -19,22 +19,44 @@ void AloopFW_inner(int ** d_x, int x_row_st, int x_col_st,
 			int u_row_st, int u_col_st, 
 			int v_row_st, int v_col_st,
 			int m, int k){
-
 	
-
-	int row_offset = blockIdx.x*blockDim.x + threadIdx.x;
-	int col_offset = blockIdx.y*blockDim.y + threadIdx.y;
-
-	int sum = d_x[u_row_st + row_offset][u_col_st + k] + d_x[v_row_st + k][v_col_st + col_offset];
-	if(d_x[x_row_st + row_offset][x_col_st + col_offset] > sum)
-		d_x[x_row_st + row_offset][x_col_st + col_offset] = sum;
+	__shared__ int s_x[S_MATRIX_SIZE][S_MATRIX_SIZE];
+	__shared__ int s_u[S_MATRIX_SIZE][S_MATRIX_SIZE];
+	__shared__ int s_v[S_MATRIX_SIZE][S_MATRIX_SIZE];
 	
+	//int row_offset = blockIdx.x*blockDim.x + threadIdx.x;
+	//int col_offset = blockIdx.y*blockDim.y + threadIdx.y;
 
+	int tx = threadIdx.x, ty = threadIdx.y;
+
+	if(tx == 0 && ty == 0){
+		for(int i = 0; i < blockDim.x; i++)
+			for(int j = 0; j < blockDim.y; j++){
+				s_x[i][j] = d_x[x_row_st + blockIdx.x * blockDim.x + i][x_col_st + blockIdx.y * blockDim.y + j];
+				s_u[i][j] = d_x[u_row_st + blockIdx.x * blockDim.x + i][u_col_st + k];
+				s_v[i][j] = d_x[v_row_st + k][v_col_st + blockIdx.y * blockDim.y + j];
+			}
+		
+	}		
 	
+	//s_x[threadIdx.x][threadIdx.y] = d_x[x_row_st + row_offset][x_col_st + col_offset];
+	syncthreads();
+
+	int sum = s_u[tx][ty] + s_v[tx][ty];
+	if(s_x[tx][ty] > sum)
+		s_x[tx][ty] = sum;	
+	
+	syncthreads();
+	if(tx == 0 && ty == 0){
+		for(int i = 0; i < blockDim.x; i++)
+			for(int j = 0; j < blockDim.y; j++)
+				d_x[x_row_st + blockIdx.x * blockDim.x + i][x_col_st + blockIdx.y * blockDim.y + j] = s_x[i][j];
+	}		
+	//syncthreads();
 	/*
 	int rowsPerThread = m / blockDim.x;
 	int colsPerThread = m / blockDim.y;
-
+	
 	int r_offset_start = threadIdx.x * rowsPerThread;
 	int r_offset_end = r_offset_start + rowsPerThread - 1;
 
@@ -68,6 +90,8 @@ void AloopFW_outer(int ** d_x, int x_row_st, int x_col_st,
 
 		dim3 blocksPerGrid(blocksX, blocksY);
 		dim3 threadsPerBlock(threadX, threadY);
+
+		//int static_mem_size = threadX * threadY * sizeof(int); //CHECk.
 		AloopFW_inner<<<blocksPerGrid, threadsPerBlock>>>(d_x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, m, k);
 	}
 
@@ -120,62 +144,6 @@ void DloopFW(int ** d_x, int x_row_st, int x_col_st,
 
 //Recursive-3 implementation in HW1
 
-void DFW(int ** x, int x_row_st, int x_col_st, 
-			int u_row_st, int u_col_st, 
-			int v_row_st, int v_col_st,
-			int n, int m){
-
-		if(m > n)
-			return;
-
-		if(n == m){		
-			/*
-			int threadZ = 1;
-			int threadX = min(m, THREADS_PER_BLOCK_X);
-			int threadY = min(m, THREADS_PER_BLOCK_Y);
-
-			int blockZ = m;
-			int blockX = m % threadX == 0 ? m/threadX : m/threadX + 1;
-			int blockY = m % threadY == 0 ? m/threadY : m/threadY + 1;
-
-			dim3 blocksPerGrid(blockX, blockY, blockZ);
-			dim3 threadsPerBlock(threadX, threadY, threadZ);
-
-			DloopFW<<<blocksPerGrid, threadsPerBlock>>>(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, m);
-			*/
-
-			AloopFW_outer(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, m);
-		}
-		else{
-			int mid = n/2;
-			//DFW (X11, U11, V11)
-			DFW(x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, mid, m);
-			
-			//DFW (X12, U11, V12)
-			DFW(x, x_row_st, x_col_st + mid, u_row_st, u_col_st, v_row_st, v_col_st + mid, mid, m);
-			
-			//DFW (X21, U21, V11)
-			DFW(x, x_row_st + mid, x_col_st, u_row_st + mid, u_col_st, v_row_st, v_col_st, mid, m);
-
-			//DFW (X22, U21, V12)
-			DFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st, v_row_st, v_col_st + mid, mid, m);
-
-			//DFW (X11, U12, V21)
-			DFW(x, x_row_st, x_col_st, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
-
-			//DFW (X12, U12, V22)
-			DFW(x, x_row_st, x_col_st + mid, u_row_st, u_col_st + mid, v_row_st + mid, v_col_st + mid, mid, m);
-
-			//DFW (X21, U22, V21)
-			DFW(x, x_row_st + mid, x_col_st, u_row_st + mid, u_col_st + mid, v_row_st + mid, v_col_st, mid, m);
-
-			//DFW (X22, U22, V22)
-			DFW(x, x_row_st + mid, x_col_st + mid, u_row_st + mid, u_col_st + mid, v_row_st + mid, v_col_st + mid, mid, m);
-		}
-
-		
-}
-
 
 void DFW(int ** d_x, int x_row_st, int x_col_st, 
 			int u_row_st, int u_col_st, 
@@ -198,7 +166,6 @@ void DFW(int ** d_x, int x_row_st, int x_col_st,
 			}
 			cudaDeviceSynchronize();
 		}
-
 	}
 
 }
@@ -220,8 +187,8 @@ void CFW(int ** d_x, int x_row_st, int x_col_st,
 		for(int k = 0; k < r; k++){
 			int offset = k*sub_size;
 
-			for(int j = 0; j < r; j++){
-				CFW(d_x, x_row_st + j*sub_size, x_col_st + offset, u_row_st + j*sub_size, u_col_st + offset, v_row_st + offset, v_col_st + offset, sub_size, depth+1, tilesize);
+			for(int i = 0; i < r; i++){
+				CFW(d_x, x_row_st + i*sub_size, x_col_st + offset, u_row_st + i*sub_size, u_col_st + offset, v_row_st + offset, v_col_st + offset, sub_size, depth+1, tilesize);
 			}
 
 			cudaDeviceSynchronize();
@@ -381,7 +348,8 @@ int main(int argc, char * argv[])
 	long long start, end;
 	
 	start = clock();
-	int tilesize[2] = {4, INT_MAX};
+	int tilesize[2] = {2, INT_MAX};
+	// int tilesize[3] = {2, 2, INT_MAX};
 	AFW(dev_matrix, 1, 1, 1, 1, 1, 1, n, 0, tilesize);
 	end = clock();
 	int ** new_matrix = copy_matrix_to_host(dev_matrix, n);

@@ -186,8 +186,20 @@ void DFW(int ** d_x, int x_row_st, int x_col_st,
 		//Execute base case
 		AloopFW_outer(d_x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, n);
 	}
-	else
-		printf("Here\n");
+	else{
+		int sub_size = n/2;
+
+		for(int k = 0; k < r; k++){
+			int offset = k*sub_size;
+			for(int i = 0; i < r; i++){
+				for(int j = 0; j < r; j++){
+					DFW(d_x, x_row_st + i*sub_size, x_col_st + j*sub_size, u_row_st + i*sub_size, u_col_st + offset, v_row_st + offset, v_col_st + j*sub_size, sub_size, depth+1, tilesize);
+				}
+			}
+			cudaDeviceSynchronize();
+		}
+
+	}
 
 }
 
@@ -201,8 +213,31 @@ void CFW(int ** d_x, int x_row_st, int x_col_st,
 		//Execute base case
 		AloopFW_outer(d_x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, n);
 	}
-	else
-		printf("Here\n");
+	else{
+		int sub_size = n/2;
+		
+
+		for(int k = 0; k < r; k++){
+			int offset = k*sub_size;
+
+			for(int j = 0; j < r; j++){
+				CFW(d_x, x_row_st + j*sub_size, x_col_st + offset, u_row_st + j*sub_size, u_col_st + offset, v_row_st + offset, v_col_st + offset, sub_size, depth+1, tilesize);
+			}
+
+			cudaDeviceSynchronize();
+
+			for(int i = 0; i < r; i++){
+				for(int j = 0; j < r; j++){
+					if(j == k)
+						continue;
+					DFW(d_x, x_row_st + i*sub_size, x_col_st + j*sub_size, u_row_st + i*sub_size, u_col_st + offset, v_row_st + offset, v_col_st + j*sub_size, sub_size, depth+1, tilesize);
+				}
+			}
+
+			cudaDeviceSynchronize();
+
+		}
+	}
 
 }
 
@@ -215,8 +250,30 @@ void BFW(int ** d_x, int x_row_st, int x_col_st,
 		//Execute base case
 		AloopFW_outer(d_x, x_row_st, x_col_st, u_row_st, u_col_st, v_row_st, v_col_st, n);
 	}
-	else
-		printf("Here\n");
+	else{
+		int sub_size = n/2;
+		
+		for(int k = 0; k < r; k++){
+			int offset = k*sub_size;	
+
+			for(int j = 0; j < r; j++){
+				BFW(d_x, x_row_st + offset, x_col_st + j*sub_size, u_row_st + offset, u_col_st + offset, v_row_st + offset, v_col_st + j*sub_size, sub_size, depth+1, tilesize);			
+			}
+
+			cudaDeviceSynchronize();
+
+			for(int i = 0; i < r; i++){
+				if(i == k)
+					continue;
+				for(int j = 0; j < r; j++){
+					DFW(d_x, x_row_st + i*sub_size, x_col_st + j*sub_size, u_row_st + i*sub_size, u_col_st + offset, v_row_st + offset, v_col_st + j*sub_size, sub_size, depth+1, tilesize);
+				}
+			}
+
+			cudaDeviceSynchronize();
+
+		}
+	}
 }
 
 
@@ -239,12 +296,14 @@ void AFW(int ** d_x, int x_row_st, int x_col_st,
 			
 			//SYNC POINT
 			cudaDeviceSynchronize();
+
 			for(int j = 0; j < r; j++){
 				if(j == k)
 					continue;
 				BFW(d_x, x_row_st + offset, x_col_st + j*sub_size, u_row_st + offset, u_col_st + offset, v_row_st + offset, v_col_st + j*sub_size, sub_size, depth+1, tilesize);
 				CFW(d_x, x_row_st + j*sub_size, x_col_st + offset, u_row_st + j*sub_size, u_col_st + offset, v_row_st + offset, v_col_st + offset, sub_size, depth+1, tilesize);
 			}
+			
 			cudaDeviceSynchronize();
 
 			for(int i = 0; i < r; i++){
@@ -256,6 +315,9 @@ void AFW(int ** d_x, int x_row_st, int x_col_st,
 					DFW(d_x, x_row_st + i*sub_size, x_col_st + j*sub_size, u_row_st + i*sub_size, u_col_st + offset, v_row_st + offset, v_col_st + j*sub_size, sub_size, depth+1, tilesize);
 				}
 			}
+
+			cudaDeviceSynchronize();
+
 		}
 	}
 }//AFW 

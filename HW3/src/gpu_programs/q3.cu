@@ -24,11 +24,11 @@ void AloopFW_inner(int ** d_x, int x_row_st, int x_col_st,
 	__shared__ int s_u[S_MATRIX_SIZE][S_MATRIX_SIZE];
 	__shared__ int s_v[S_MATRIX_SIZE][S_MATRIX_SIZE];
 	
-	//int row_offset = blockIdx.x*blockDim.x + threadIdx.x;
-	//int col_offset = blockIdx.y*blockDim.y + threadIdx.y;
+	int row_offset = blockIdx.x*blockDim.x + threadIdx.x;
+	int col_offset = blockIdx.y*blockDim.y + threadIdx.y;
 
 	int tx = threadIdx.x, ty = threadIdx.y;
-
+	/*
 	if(tx == 0 && ty == 0){
 		for(int i = 0; i < blockDim.x; i++)
 			for(int j = 0; j < blockDim.y; j++){
@@ -38,8 +38,13 @@ void AloopFW_inner(int ** d_x, int x_row_st, int x_col_st,
 			}
 		
 	}		
-	
+	*/
+
 	//s_x[threadIdx.x][threadIdx.y] = d_x[x_row_st + row_offset][x_col_st + col_offset];
+	s_x[tx][ty] = d_x[x_row_st + row_offset][x_col_st + col_offset];
+	s_u[tx][ty] = d_x[u_row_st + row_offset][u_col_st + k];
+	s_v[tx][ty] = d_x[v_row_st + k][v_col_st + col_offset];
+
 	syncthreads();
 
 	int sum = s_u[tx][ty] + s_v[tx][ty];
@@ -47,11 +52,15 @@ void AloopFW_inner(int ** d_x, int x_row_st, int x_col_st,
 		s_x[tx][ty] = sum;	
 	
 	syncthreads();
+
+	/*
 	if(tx == 0 && ty == 0){
 		for(int i = 0; i < blockDim.x; i++)
 			for(int j = 0; j < blockDim.y; j++)
 				d_x[x_row_st + blockIdx.x * blockDim.x + i][x_col_st + blockIdx.y * blockDim.y + j] = s_x[i][j];
-	}		
+	}*/
+	d_x[x_row_st + row_offset][x_col_st + col_offset] = s_x[tx][ty];
+
 	//syncthreads();
 	/*
 	int rowsPerThread = m / blockDim.x;
